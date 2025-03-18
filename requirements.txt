@@ -1,0 +1,6 @@
+openai
+PyPDF2
+requests
+pandas
+openpyxl
+python-dotenv
