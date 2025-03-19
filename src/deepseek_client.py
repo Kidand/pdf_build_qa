@@ -58,7 +58,10 @@ class DeepSeekClient:
         while attempts < self.max_retries:
             attempts += 1
             try:
-                logger.info(f"开始调用DeepSeek API生成问答对 (尝试 {attempts}/{self.max_retries})")
+                if attempts == 1:
+                    logger.info("开始调用DeepSeek API生成问答对")
+                else:
+                    logger.info(f"重试调用DeepSeek API (第 {attempts-1}/{self.max_retries-1} 次重试)")
                 
                 # 使用OpenAI SDK调用API
                 response = self.client.chat.completions.create(
@@ -105,8 +108,8 @@ class DeepSeekClient:
                     break
                 
                 # 否则等待后继续重试
-                wait_time = self.retry_delay * attempts  # 指数退避策略
-                logger.info(f"将在 {wait_time} 秒后进行第 {attempts + 1} 次重试")
+                wait_time = self.retry_delay * (attempts-1)  # 指数退避策略
+                logger.info(f"将在 {wait_time} 秒后进行重试")
                 time.sleep(wait_time)
         
         # 如果所有重试都失败了
