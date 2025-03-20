@@ -42,7 +42,7 @@ class DeepSeekClient:
         """使用OpenAI SDK生成问答对，带有重试机制"""
         
         # 构建提示词，读取全部content
-        prompt = f"""根据以下内容，深刻理解，并生成{num_pairs}个中文问答对，生成的问答对要尽可能覆盖内容，回答内容要尽可能详细。返回成JSON格式的数组，每个问答对包含'question'和'answer'字段。
+        prompt = f"""请你根据以下内容，深刻理解，并生成{num_pairs}个中文问答对，生成的问答对要尽可能覆盖内容，问答对中的回答要尽可能详细。返回成JSON格式的数组，每个问答对包含'question'和'answer'字段。 
         
 内容:
 {content}
@@ -65,8 +65,7 @@ class DeepSeekClient:
                 
                 # 使用OpenAI SDK调用API
                 response = self.client.chat.completions.create(
-                    # model="deepseek-chat", # 官方模型
-                    model="deepseek-v3",
+                    model = os.getenv("MODEL_NAME", "deepseek-chat"),
                     messages=[
                         {"role": "user", "content": prompt}
                     ],

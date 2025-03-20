@@ -47,6 +47,7 @@ cp .env.example .env
 ```
 DEEPSEEK_API_KEY=your_api_key_here
 DEEPSEEK_API_URL=https://api.deepseek.com/v1
+MODEL_NAME=deepseek-chat
 ```
 
 ### 4. 准备PDF文件
@@ -79,6 +80,7 @@ python main.py --pdf_dir my_pdfs --output_dir results --num_qa 30 --max_workers 
 | --output_dir | 输出目录 | output |
 | --num_qa | 每个PDF生成的问答对数量 | 20 |
 | --max_workers | 最大并行处理的文件数 | 3 |
+| --api_retries | api尝试次数 | 3 |
 
 ### 6. 查看结果
 
