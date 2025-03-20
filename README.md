@@ -67,7 +67,7 @@ python main.py
 您可以通过命令行参数自定义程序行为：
 
 ```bash
-python main.py --pdf_dir=your_pdf_dir --num_qa=30 --qa_level=advanced
+python main.py --num_qa=10 --qa_level=advanced --max_workers=10
 ```
 
 可用参数：
