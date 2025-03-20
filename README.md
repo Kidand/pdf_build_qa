@@ -78,7 +78,7 @@ python main.py --pdf_dir my_pdfs --output_dir results --num_qa 30 --max_workers 
 | ---- | ---- | ------ |
 | --pdf_dir | PDF文件所在目录 | pdf_files |
 | --output_dir | 输出目录 | output |
-| --num_qa | 每个PDF生成的问答对数量 | 20 |
+| --num_qa | 每个PDF生成的问答对数量 | 10 |
 | --max_workers | 最大并行处理的文件数 | 3 |
 | --api_retries | api尝试次数 | 3 |
 

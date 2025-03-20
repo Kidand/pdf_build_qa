@@ -37,14 +37,14 @@ def parse_arguments():
     parser.add_argument('--output_dir', type=str, default='output',
                         help='输出目录 (默认: output)')
     
-    parser.add_argument('--num_qa', type=int, default=20,
-                        help='每个PDF生成的问答对数量 (默认: 20)')
+    parser.add_argument('--num_qa', type=int, default=10,
+                        help='每个PDF生成的问答对数量 (默认: 10)')
     
     parser.add_argument('--max_workers', type=int, default=3,
                         help='最大并行处理的文件数 (默认: 3)')
     
     parser.add_argument('--api_retries', type=int, default=3,
-                        help='API调用失败时的最大重试次数 (默认: 3)')
+                        help='API尝试调用次数 (默认: 3)')
     
     parser.add_argument('--retry_delay', type=int, default=2,
                         help='API重试间隔时间(秒) (默认: 2)')
