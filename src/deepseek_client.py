@@ -41,11 +41,11 @@ class DeepSeekClient:
     def generate_qa_pairs(self, content, num_pairs=10):
         """使用OpenAI SDK生成问答对，带有重试机制"""
         
-        # 构建提示词，读取全部content
+        # 构建提示词，读取前50000个字符
         prompt = f"""请你根据以下内容，深刻理解，并生成{num_pairs}个中文问答对，生成的问答对要尽可能覆盖内容，问答对中的回答要尽可能详细。返回成JSON格式的数组，每个问答对包含'question'和'answer'字段。 
 
 内容:
-{content}
+{content[:50000]}
 
 请仅返回JSON数组，不要包含任何其他文本或解释。格式示例:
 [
