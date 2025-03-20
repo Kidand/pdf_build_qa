@@ -38,26 +38,17 @@ class DeepSeekClient:
         
         logger.info("DeepSeek API客户端初始化完成")
     
-    def generate_qa_pairs(self, content, num_pairs=10):
-        """使用OpenAI SDK生成问答对，带有重试机制"""
+    def generate_qa_pairs(self, prompt, num_pairs=10):
+        """
+        使用OpenAI SDK生成问答对，带有重试机制
         
-        # 构建提示词，读取前50000个字符
-        prompt = f"""请你根据以下要求和内容，深刻理解，并生成{num_pairs}个中文问答对。
-要求：
-1. 生成的问答对要尽可能覆盖内容。
-2. 问答对中的针对论文提出的问题都要体现出论文的标题。
-3. 问答对中的回答要尽可能详细。
-4. 返回成JSON格式的数组，每个问答对包含'question'和'answer'字段。 
-
-内容:
-{content[:50000]}
-
-请仅返回JSON数组，不要包含任何其他文本或解释。格式示例:
-[
-  {{"question": "问题1", "answer": "答案1"}},
-  {{"question": "问题2", "answer": "答案2"}}
-]"""
-
+        Args:
+            prompt (str): 完整的提示词
+            num_pairs (int): 期望生成的问答对数量
+            
+        Returns:
+            list: 问答对列表
+        """
         # 实现重试机制
         attempts = 0
         while attempts < self.max_retries:
@@ -75,7 +66,7 @@ class DeepSeekClient:
                         {"role": "user", "content": prompt}
                     ],
                     temperature=0.7,
-                    max_tokens=4000
+                    max_tokens=8000  # 增加token数量以支持更复杂的回答
                 )
                 
                 # 获取响应文本
@@ -89,6 +80,10 @@ class DeepSeekClient:
                     # 尝试直接解析JSON
                     qa_pairs = json.loads(response_text)
                     logger.info(f"成功生成 {len(qa_pairs)} 个问答对")
+                    
+                    # 验证问答对格式
+                    self._validate_qa_pairs(qa_pairs)
+                    
                     return qa_pairs
                 except json.JSONDecodeError:
                     # 如果直接解析失败，尝试从文本中提取JSON部分
@@ -96,13 +91,18 @@ class DeepSeekClient:
                     if json_match:
                         try:
                             qa_pairs = json.loads(json_match.group(0))
-                            logger.info(f"成功生成 {len(qa_pairs)} 个问答对")
+                            logger.info(f"成功从部分响应中提取并生成 {len(qa_pairs)} 个问答对")
+                            
+                            # 验证问答对格式
+                            self._validate_qa_pairs(qa_pairs)
+                            
                             return qa_pairs
                         except json.JSONDecodeError:
                             logger.error("无法解析API返回的JSON格式")
                             # 继续重试
                     else:
                         logger.error("无法从API响应中提取JSON")
+                        logger.debug(f"API响应内容: {response_text[:200]}...")
                         # 继续重试
                 
             except Exception as e:
@@ -119,3 +119,31 @@ class DeepSeekClient:
         # 如果所有重试都失败了
         logger.error(f"经过 {self.max_retries} 次尝试后，仍然无法成功调用DeepSeek API")
         return []
+    
+    def _validate_qa_pairs(self, qa_pairs):
+        """
+        验证问答对格式并进行必要的修复
+        
+        Args:
+            qa_pairs (list): 问答对列表
+            
+        Returns:
+            list: 验证后的问答对列表
+        """
+        valid_pairs = []
+        
+        for qa in qa_pairs:
+            # 检查基本字段
+            if not isinstance(qa, dict):
+                continue
+                
+            if 'question' not in qa or 'answer' not in qa:
+                continue
+                
+            # 如果没有level字段，添加默认level
+            if 'level' not in qa:
+                qa['level'] = 'basic'
+            
+            valid_pairs.append(qa)
+        
+        return valid_pairs

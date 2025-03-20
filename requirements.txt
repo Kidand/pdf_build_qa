@@ -4,3 +4,10 @@ requests
 pandas
 openpyxl
 python-dotenv
+pdfplumber
+pymupdf
+pix2tex
+numpy
+pillow
+torch
+transformers

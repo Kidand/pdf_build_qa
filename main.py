@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 """
-PDF问答生成器主程序
+增强型PDF问答生成器主程序
 
-使用DeepSeek API从PDF文件生成问答对，并保存到Excel文件
+使用DeepSeek API从PDF文件生成多层次问答对，支持LaTeX公式提取，并保存到Excel文件
 """
 
 import os
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 def parse_arguments():
     """解析命令行参数"""
-    parser = argparse.ArgumentParser(description='从PDF文件生成问答对并保存到Excel文件')
+    parser = argparse.ArgumentParser(description='从PDF文件生成多层次问答对并保存到Excel文件')
     
     parser.add_argument('--pdf_dir', type=str, default='pdf_files',
                         help='PDF文件所在目录 (默认: pdf_files)')
@@ -44,10 +44,19 @@ def parse_arguments():
                         help='最大并行处理的文件数 (默认: 3)')
     
     parser.add_argument('--api_retries', type=int, default=3,
-                        help='API尝试调用次数 (默认: 3)')
+                        help='API调用失败时的最大重试次数 (默认: 3)')
     
     parser.add_argument('--retry_delay', type=int, default=2,
                         help='API重试间隔时间(秒) (默认: 2)')
+    
+    parser.add_argument('--qa_level', type=str, choices=['basic', 'intermediate', 'advanced', 'all'],
+                        default='all', help='问答对级别 (默认: all - 生成所有级别)')
+    
+    parser.add_argument('--use_latex_ocr', action='store_true',
+                        help='启用LaTeX公式OCR识别 (默认: 不启用)')
+    
+    parser.add_argument('--model', type=str, default=None,
+                        help='指定DeepSeek模型 (默认: 使用.env中的MODEL_NAME或deepseek-chat)')
     
     return parser.parse_args()
 
@@ -59,8 +68,15 @@ def main():
     # 解析命令行参数
     args = parse_arguments()
     
+    # 如果指定了模型，设置环境变量
+    if args.model:
+        os.environ["MODEL_NAME"] = args.model
+    
+    # 处理qa_level参数
+    qa_level = None if args.qa_level == 'all' else args.qa_level
+    
     try:
-        logger.info("开始执行PDF问答生成器")
+        logger.info("开始执行增强型PDF问答生成器")
         
         # 检查PDF目录是否存在
         if not os.path.exists(args.pdf_dir):
@@ -74,7 +90,9 @@ def main():
             num_qa_pairs=args.num_qa,
             max_workers=args.max_workers,
             api_max_retries=args.api_retries,
-            api_retry_delay=args.retry_delay
+            api_retry_delay=args.retry_delay,
+            qa_level=qa_level,
+            use_latex_ocr=args.use_latex_ocr
         )
         
         # 初始化Excel写入器
@@ -112,6 +130,14 @@ def main():
                 for file in failed_files:
                     print(f"  - {file}")
                 print(f"失败文件列表已保存到: {failed_files_log}")
+                
+            # 打印统计信息
+            total_qa_pairs = sum(len(qa_pairs) for qa_pairs, _, _, _ in qa_results)
+            print(f"\n处理统计:")
+            print(f"- 成功处理文件数: {len(qa_results)}")
+            print(f"- 生成问答对总数: {total_qa_pairs}")
+            print(f"- 失败文件数: {len(failed_files)}")
+            print("\n结果已保存为Excel和JSON格式，可在输出目录查看详细统计信息。")
         else:
             logger.error("保存结果到Excel文件失败")
             print("错误: 保存结果到Excel文件失败")
