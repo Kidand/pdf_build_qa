@@ -20,13 +20,15 @@
 1. 克隆仓库并进入目录：
 
 ```bash
-git clone https://github.com/yourusername/pdf-qa-generator.git
-cd pdf-qa-generator
+git clone https://github.com/Kidand/pdf_build_qa.git
+cd pdf_build_qa
 ```
 
-2. 安装依赖项：
+2. 创建conda环境并安装依赖项：
 
 ```bash
+conda create -n pdf_qa_env python=3.10
+conda activate pdf_qa_env
 pip install -r requirements.txt
 ```
 
