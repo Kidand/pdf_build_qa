@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>增强型PDF问答生成器</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <div class="sidebar-header">
+                    <h3>增强型PDF问答生成器</h3>
+                </div>
+                <ul class="nav flex-column sidebar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#home" data-bs-toggle="tab">
+                            <i class="bi bi-house-door"></i> 首页
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#settings" data-bs-toggle="tab">
+                            <i class="bi bi-gear"></i> 参数设置
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#files" data-bs-toggle="tab">
+                            <i class="bi bi-file-earmark-text"></i> 文件管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#help" data-bs-toggle="tab">
+                            <i class="bi bi-question-circle"></i> 帮助
+                        </a>
+                    </li>
+                </ul>
+                <div class="sidebar-footer">
+                    <p>版本: 1.0.0</p>
+                </div>
+            </div>
+
+            <!-- 主要内容区域 -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <div class="tab-content">
+                    <!-- 首页 -->
+                    <div class="tab-pane fade show active" id="home">
+                        <div class="card welcome-card">
+                            <div class="card-body">
+                                <h2 class="card-title">欢迎使用增强型PDF问答生成器</h2>
+                                <p class="card-text">该工具可以从PDF文件中提取文本和公式，生成多层次的中文问答对，适用于构建特定领域的问答数据集。</p>
+                                
+                                <div class="card feature-card">
+                                    <div class="card-body">
+                                        <h5><i class="bi bi-stars"></i> 主要功能</h5>
+                                        <div class="row feature-list">
+                                            <div class="col-md-6">
+                                                <ul>
+                                                    <li>增强型PDF解析，准确提取文本</li>
+                                                    <li>LaTeX公式识别与转换</li>
+                                                    <li>多层次问答生成（基础/中级/高级）</li>
+                                                </ul>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <ul>
+                                                    <li>模拟"学生-教授"对话</li>
+                                                    <li>多种格式导出（Excel/JSON）</li>
+                                                    <li>详细统计报告生成</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="upload-section mt-4">
+                                    <h4>开始处理</h4>
+                                    <p>选择您要处理的PDF文件：</p>
+                                    
+                                    <div class="drop-zone" id="dropZone">
+                                        <div class="drop-zone-prompt">
+                                            <i class="bi bi-cloud-arrow-up-fill"></i>
+                                            <p>拖放PDF文件到此处或点击上传</p>
+                                            <span class="drop-zone-hint">支持单个文件，最大50MB</span>
+                                        </div>
+                                        <input type="file" id="fileInput" class="drop-zone-input" accept=".pdf">
+                                    </div>
+                                    
+                                    <div class="selected-file mt-3 d-none" id="selectedFileInfo">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-file-earmark-pdf file-icon"></i>
+                                            <div class="selected-file-details">
+                                                <h5 id="selectedFileName">文件名称.pdf</h5>
+                                                <p id="selectedFileSize">文件大小: 0MB</p>
+                                            </div>
+                                            <button type="button" class="btn btn-outline-danger ms-auto" id="removeFileBtn">
+                                                <i class="bi bi-trash"></i> 移除
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="processing-controls mt-4">
+                                        <button type="button" class="btn btn-primary btn-lg" id="startProcessingBtn" disabled>
+                                            <i class="bi bi-play-fill"></i> 开始处理
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 处理进度 -->
+                        <div class="card processing-card mt-4 d-none" id="processingCard">
+                            <div class="card-body">
+                                <h4 class="card-title">处理进度</h4>
+                                <div class="progress-status">
+                                    <p id="processingMessage">正在处理PDF文件...</p>
+                                    <div class="progress">
+                                        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 处理结果 -->
+                        <div class="card result-card mt-4 d-none" id="resultCard">
+                            <div class="card-body">
+                                <h4 class="card-title">处理结果</h4>
+                                <div id="resultSuccess" class="d-none">
+                                    <div class="alert alert-success">
+                                        <i class="bi bi-check-circle-fill"></i> 处理成功！已生成问答对数据。
+                                    </div>
+                                    
+                                    <div class="result-stats">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="stats-card">
+                                                    <h5><i class="bi bi-file-earmark-text"></i> 处理的文件</h5>
+                                                    <p id="processedFiles">1</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="stats-card">
+                                                    <h5><i class="bi bi-chat-dots"></i> 生成的问答对</h5>
+                                                    <p id="generatedQAPairs">0</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="stats-card">
+                                                    <h5><i class="bi bi-exclamation-triangle"></i> 失败文件数</h5>
+                                                    <p id="failedFiles">0</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="download-section mt-4">
+                                        <h5>下载文件</h5>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <a id="downloadExcel" href="#" class="btn btn-outline-success btn-block">
+                                                    <i class="bi bi-file-earmark-excel"></i> 下载Excel文件
+                                                </a>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <a id="downloadJson" href="#" class="btn btn-outline-primary btn-block">
+                                                    <i class="bi bi-file-earmark-code"></i> 下载JSON文件
+                                                </a>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <a id="downloadStats" href="#" class="btn btn-outline-info btn-block">
+                                                    <i class="bi bi-graph-up"></i> 下载统计文件
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div id="resultError" class="d-none">
+                                    <div class="alert alert-danger">
+                                        <i class="bi bi-exclamation-triangle-fill"></i> 
+                                        <span id="errorMessage">处理过程中出现错误</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-primary" id="newProcessingBtn">
+                                        <i class="bi bi-plus-circle"></i> 开始新的处理
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 参数设置 -->
+                    <div class="tab-pane fade" id="settings">
+                        <div class="card">
+                            <div class="card-body">
+                                <h2 class="card-title">参数设置</h2>
+                                <p class="card-text">自定义生成问答对的各项参数</p>
+                                
+                                <form id="settingsForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="numQA" class="form-label">问答对数量</label>
+                                                <div class="d-flex align-items-center">
+                                                    <input type="range" class="form-range" id="numQA" min="5" max="30" step="5" value="10">
+                                                    <span id="numQAValue" class="ms-2 badge bg-primary">10</span>
+                                                </div>
+                                                <div class="form-text">为每个PDF文件生成的问答对数量</div>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">问答对级别</label>
+                                                <div class="btn-group w-100" role="group">
+                                                    <input type="radio" class="btn-check" name="qaLevel" id="qaLevelAll" value="all" checked>
+                                                    <label class="btn btn-outline-primary" for="qaLevelAll">全部</label>
+                                                    
+                                                    <input type="radio" class="btn-check" name="qaLevel" id="qaLevelBasic" value="basic">
+                                                    <label class="btn btn-outline-primary" for="qaLevelBasic">基础</label>
+                                                    
+                                                    <input type="radio" class="btn-check" name="qaLevel" id="qaLevelIntermediate" value="intermediate">
+                                                    <label class="btn btn-outline-primary" for="qaLevelIntermediate">中级</label>
+                                                    
+                                                    <input type="radio" class="btn-check" name="qaLevel" id="qaLevelAdvanced" value="advanced">
+                                                    <label class="btn btn-outline-primary" for="qaLevelAdvanced">高级</label>
+                                                </div>
+                                                <div class="form-text">选择问答对的难度级别</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="useLatexOCR">
+                                                    <label class="form-check-label" for="useLatexOCR">启用LaTeX公式OCR识别</label>
+                                                </div>
+                                                <div class="form-text">启用后可识别PDF中的数学公式，但会增加处理时间和资源占用</div>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label for="model" class="form-label">使用模型</label>
+                                                <select class="form-select" id="model">
+                                                    <option value="">使用默认模型</option>
+                                                    <option value="deepseek-chat">DeepSeek Chat</option>
+                                                    <option value="deepseek-chat-pro">DeepSeek Chat Pro</option>
+                                                </select>
+                                                <div class="form-text">选择用于生成问答对的DeepSeek模型</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="accordion" id="advancedSettingsAccordion">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#advancedSettings">
+                                                    高级设置
+                                                </button>
+                                            </h2>
+                                            <div id="advancedSettings" class="accordion-collapse collapse" data-bs-parent="#advancedSettingsAccordion">
+                                                <div class="accordion-body">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label for="maxWorkers" class="form-label">最大并行处理文件数</label>
+                                                                <input type="number" class="form-control" id="maxWorkers" min="1" max="10" value="3">
+                                                                <div class="form-text">同时处理的最大文件数，建议不超过CPU核心数</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label for="apiRetries" class="form-label">API调用最大重试次数</label>
+                                                                <input type="number" class="form-control" id="apiRetries" min="1" max="5" value="3">
+                                                                <div class="form-text">API调用失败时的最大重试次数</div>
+                                                            </div>
+                                                            
+                                                            <div class="mb-3">
+                                                                <label for="retryDelay" class="form-label">重试间隔时间(秒)</label>
+                                                                <input type="number" class="form-control" id="retryDelay" min="1" max="10" value="2">
+                                                                <div class="form-text">API重试之间的间隔时间</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 文件管理 -->
+                    <div class="tab-pane fade" id="files">
+                        <div class="card">
+                            <div class="card-body">
+                                <h2 class="card-title">文件管理</h2>
+                                <p class="card-text">管理已处理的文件和结果</p>
+                                
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle-fill"></i> 此功能尚未实现，将在后续版本中提供。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 帮助 -->
+                    <div class="tab-pane fade" id="help">
+                        <div class="card">
+                            <div class="card-body">
+                                <h2 class="card-title">帮助文档</h2>
+                                
+                                <div class="accordion" id="helpAccordion">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#helpUsage">
+                                                使用指南
+                                            </button>
+                                        </h2>
+                                        <div id="helpUsage" class="accordion-collapse collapse show" data-bs-parent="#helpAccordion">
+                                            <div class="accordion-body">
+                                                <p>使用增强型PDF问答生成器的基本步骤：</p>
+                                                <ol>
+                                                    <li>上传PDF文件：在首页拖放文件或点击上传按钮选择PDF文件。</li>
+                                                    <li>配置参数：在参数设置页面自定义生成选项，如问答对数量、难度级别等。</li>
+                                                    <li>开始处理：点击"开始处理"按钮，等待处理完成。</li>
+                                                    <li>下载结果：处理完成后，可以下载Excel、JSON或统计文件。</li>
+                                                </ol>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpQALevels">
+                                                问答级别说明
+                                            </button>
+                                        </h2>
+                                        <div id="helpQALevels" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                            <div class="accordion-body">
+                                                <p>系统支持生成三种不同难度级别的问答对：</p>
+                                                
+                                                <h5>基础 (basic)</h5>
+                                                <ul>
+                                                    <li>关注基础概念、定义和简单原理</li>
+                                                    <li>适合初学者理解</li>
+                                                    <li>使用通俗易懂的语言，避免过多专业术语</li>
+                                                </ul>
+                                                
+                                                <h5>中级 (intermediate)</h5>
+                                                <ul>
+                                                    <li>关注概念间的联系、原理应用和中等复杂度的分析</li>
+                                                    <li>适合有一定基础的学习者</li>
+                                                    <li>包含一些专业术语和理论框架的讨论</li>
+                                                </ul>
+                                                
+                                                <h5>高级 (advanced)</h5>
+                                                <ul>
+                                                    <li>关注批判性分析、方法论和前沿问题</li>
+                                                    <li>适合研究人员和高级学者</li>
+                                                    <li>包含深入的专业讨论、方法论分析和研究局限性</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpTroubleshooting">
+                                                故障排除
+                                            </button>
+                                        </h2>
+                                        <div id="helpTroubleshooting" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                            <div class="accordion-body">
+                                                <h5>常见问题：</h5>
+                                                <div class="troubleshooting-item">
+                                                    <p><strong>问题：文件上传失败</strong></p>
+                                                    <p>解决方案：确保文件为PDF格式且大小不超过50MB。</p>
+                                                </div>
+                                                
+                                                <div class="troubleshooting-item">
+                                                    <p><strong>问题：处理过程中出错</strong></p>
+                                                    <p>解决方案：检查API密钥是否配置正确，并尝试降低并行处理数量。</p>
+                                                </div>
+                                                
+                                                <div class="troubleshooting-item">
+                                                    <p><strong>问题：生成的问答对较少</strong></p>
+                                                    <p>解决方案：增加问答对数量设置，并确保PDF文件包含足够的内容。</p>
+                                                </div>
+                                                
+                                                <div class="troubleshooting-item">
+                                                    <p><strong>问题：LaTeX公式识别失败</strong></p>
+                                                    <p>解决方案：确保系统有足够资源运行LaTeX OCR模型，或尝试禁用LaTeX OCR功能。</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html> 

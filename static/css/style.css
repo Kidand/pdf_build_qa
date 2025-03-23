@@ -1,0 +1,314 @@
+/* 全局样式 */
+:root {
+    --primary-color: #4e73df;
+    --primary-dark: #2e59d9;
+    --secondary-color: #858796;
+    --success-color: #1cc88a;
+    --info-color: #36b9cc;
+    --warning-color: #f6c23e;
+    --danger-color: #e74a3b;
+    --light-color: #f8f9fc;
+    --dark-color: #5a5c69;
+    --sidebar-width: 240px;
+}
+
+body {
+    font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f8f9fc;
+    color: #5a5c69;
+}
+
+/* 侧边栏样式 */
+.sidebar {
+    background: linear-gradient(180deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    min-height: 100vh;
+    padding: 0;
+    transition: all 0.3s;
+    position: sticky;
+    top: 0;
+}
+
+.sidebar-header {
+    padding: 1.5rem 1rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.sidebar-nav {
+    padding: 1rem 0;
+}
+
+.sidebar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.75rem 1rem;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s;
+}
+
+.sidebar-nav .nav-link:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-nav .nav-link.active {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.2);
+    font-weight: 600;
+}
+
+.sidebar-nav .nav-link i {
+    margin-right: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.sidebar-footer {
+    padding: 1rem;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 主内容区域 */
+.main-content {
+    padding: 1.5rem;
+    overflow-x: hidden;
+}
+
+/* 卡片样式 */
+.card {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    margin-bottom: 1.5rem;
+}
+
+.card-title {
+    font-weight: 700;
+    color: var(--dark-color);
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 1px solid #e3e6f0;
+    padding: 1rem 1.25rem;
+}
+
+.welcome-card {
+    background-color: white;
+}
+
+.feature-card {
+    background-color: #f8f9fc;
+    margin-top: 1.5rem;
+}
+
+.feature-card h5 {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.feature-list ul {
+    padding-left: 1.25rem;
+}
+
+.feature-list li {
+    margin-bottom: 0.5rem;
+}
+
+/* 拖放上传区域 */
+.drop-zone {
+    max-width: 100%;
+    height: 200px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    color: #6c757d;
+    border: 2px dashed #dee2e6;
+    border-radius: 0.5rem;
+    background-color: #f8f9fc;
+    transition: border .3s ease-in-out;
+}
+
+.drop-zone:hover {
+    border-color: var(--primary-color);
+}
+
+.drop-zone.active {
+    border-color: var(--success-color);
+    background-color: rgba(28, 200, 138, 0.05);
+}
+
+.drop-zone-input {
+    display: none;
+}
+
+.drop-zone-prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.drop-zone-prompt i {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.drop-zone-prompt p {
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.drop-zone-hint {
+    font-size: 0.875rem;
+    color: var(--secondary-color);
+}
+
+/* 已选择文件样式 */
+.selected-file {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: white;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+}
+
+.file-icon {
+    font-size: 2.5rem;
+    color: #e74a3b;
+    margin-right: 1rem;
+}
+
+.selected-file-details h5 {
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.selected-file-details p {
+    margin-bottom: 0;
+    color: var(--secondary-color);
+    font-size: 0.875rem;
+}
+
+/* 处理进度样式 */
+.progress {
+    height: 1rem;
+    border-radius: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.progress-status {
+    margin-top: 1rem;
+}
+
+#processingMessage {
+    font-weight: 500;
+}
+
+/* 结果样式 */
+.stats-card {
+    background-color: #f8f9fc;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    text-align: center;
+}
+
+.stats-card h5 {
+    color: var(--dark-color);
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.stats-card p {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0;
+    color: var(--primary-color);
+}
+
+.download-section .btn {
+    width: 100%;
+    margin-bottom: 1rem;
+    padding: 0.75rem 0;
+}
+
+.troubleshooting-item {
+    margin-bottom: 1.25rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid #eaecf4;
+}
+
+.troubleshooting-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* 按钮样式 */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+/* 表单样式 */
+.form-label {
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.form-range::-webkit-slider-thumb {
+    background-color: var(--primary-color);
+}
+
+.form-range::-moz-range-thumb {
+    background-color: var(--primary-color);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* 响应式调整 */
+@media (max-width: 767.98px) {
+    .sidebar {
+        min-height: auto;
+        position: static;
+    }
+    
+    .sidebar-footer {
+        position: static;
+    }
+}
+
+/* 自定义动画 */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+} 

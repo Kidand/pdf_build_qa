@@ -11,3 +11,5 @@ numpy
 pillow
 torch
 transformers
+flask
+werkzeug
