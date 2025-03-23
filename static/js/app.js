@@ -4,6 +4,8 @@
  */
 
 $(document).ready(function() {
+    console.log("Document ready, initializing app...");
+    
     // 全局变量
     let uploadedFile = null;
     let currentTask = null;
@@ -29,6 +31,16 @@ $(document).ready(function() {
     const downloadJson = $('#downloadJson');
     const downloadStats = $('#downloadStats');
     
+    console.log("DOM elements initialized");
+    
+    // 检查DOM元素是否存在
+    if (dropZone.length === 0) {
+        console.error("Error: #dropZone element not found!");
+    }
+    if (fileInput.length === 0) {
+        console.error("Error: #fileInput element not found!");
+    }
+    
     // 参数控件
     const numQASlider = $('#numQA');
     const numQAValue = $('#numQAValue');
@@ -45,6 +57,64 @@ $(document).ready(function() {
     });
     
     // 拖放区域事件处理
+    console.log("Setting up drag & drop events");
+    
+    // 直接使用原生JavaScript绑定事件，以确保事件被正确捕获
+    const dropZoneElement = document.getElementById('dropZone');
+    const fileInputElement = document.getElementById('fileInput');
+    
+    if (dropZoneElement && fileInputElement) {
+        // 拖拽相关事件
+        dropZoneElement.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.add('active');
+            console.log("Drag over event triggered");
+        });
+        
+        dropZoneElement.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.remove('active');
+            console.log("Drag leave event triggered");
+        });
+        
+        dropZoneElement.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.remove('active');
+            console.log("Drop event triggered");
+            
+            if (e.dataTransfer.files.length) {
+                handleFileSelect(e.dataTransfer.files[0]);
+            }
+        });
+        
+        // 点击上传事件
+        dropZoneElement.addEventListener('click', function() {
+            console.log("Drop zone clicked, triggering file input click");
+            fileInputElement.click();
+        });
+        
+        fileInputElement.addEventListener('change', function() {
+            console.log("File input change event triggered");
+            if (this.files.length) {
+                handleFileSelect(this.files[0]);
+            }
+        });
+        
+        console.log("All drop zone events registered successfully");
+    } else {
+        console.error("Could not find drop zone or file input elements!");
+        if (!dropZoneElement) {
+            console.error("Drop zone element is missing");
+        }
+        if (!fileInputElement) {
+            console.error("File input element is missing");
+        }
+    }
+    
+    // 保留jQuery事件绑定作为备份
     dropZone.on('dragover', function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -68,10 +138,12 @@ $(document).ready(function() {
     });
     
     dropZone.on('click', function() {
+        console.log("Drop zone clicked (jQuery)");
         fileInput.click();
     });
     
     fileInput.on('change', function() {
+        console.log("File input changed (jQuery)");
         if (this.files.length) {
             handleFileSelect(this.files[0]);
         }
@@ -79,6 +151,7 @@ $(document).ready(function() {
     
     // 文件选择处理
     function handleFileSelect(file) {
+        console.log("File selected:", file.name);
         if (!file) return;
         
         // 验证文件类型
@@ -136,6 +209,7 @@ $(document).ready(function() {
     
     // 上传文件到服务器
     function uploadFile(file) {
+        console.log("Uploading file:", file.name);
         const formData = new FormData();
         formData.append('file', file);
         
@@ -146,6 +220,7 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             success: function(response) {
+                console.log("Upload response:", response);
                 if (response.status === 'success') {
                     updateProgress(20, '文件上传成功，准备处理...');
                     startProcessing(response.filename);
@@ -153,7 +228,8 @@ $(document).ready(function() {
                     handleError('文件上传失败: ' + response.message);
                 }
             },
-            error: function(xhr) {
+            error: function(xhr, status, error) {
+                console.error("Upload error:", error);
                 let errorMsg = '文件上传失败';
                 try {
                     const resp = JSON.parse(xhr.responseText);
@@ -290,6 +366,7 @@ $(document).ready(function() {
     
     // 处理错误
     function handleError(errorMsg) {
+        console.error("Error:", errorMsg);
         // 停止所有轮询
         if (pollingInterval) {
             clearInterval(pollingInterval);
@@ -310,6 +387,7 @@ $(document).ready(function() {
     
     // 显示警告提示
     function showAlert(message) {
+        console.log("Showing alert:", message);
         // 检查是否已有警告框
         let alertBox = $('.alert-warning');
         if (alertBox.length === 0) {
@@ -365,4 +443,6 @@ $(document).ready(function() {
             return (bytes / 1048576).toFixed(2) + ' MB';
         }
     }
+    
+    console.log("App initialization completed");
 }); 
