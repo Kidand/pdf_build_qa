@@ -93,9 +93,17 @@ def upload_file():
     if not file.filename.lower().endswith('.pdf'):
         return jsonify({"status": "error", "message": "只支持PDF文件"}), 400
     
-    # 生成一个唯一的文件名以避免冲突
-    original_filename = secure_filename(file.filename)
-    filename = f"{int(time.time())}_{original_filename}"
+    # 生成一个唯一的文件名以避免冲突，但保留原始文件名
+    original_filename = file.filename
+    # 移除文件名中的不安全字符，但保留中文字符
+    base_name = os.path.splitext(original_filename)[0]
+    # 过滤掉不安全的字符，但保留中文和基本拉丁字符
+    safe_base_name = "".join(c for c in base_name if c.isalnum() or c in ".-_ " or ('\u4e00' <= c <= '\u9fff'))
+    if not safe_base_name:
+        safe_base_name = "pdf_file"  # 如果过滤后为空，使用默认名称
+    
+    # 添加时间戳确保唯一性
+    filename = f"{int(time.time())}_{safe_base_name}.pdf"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     
     try:
@@ -138,13 +146,15 @@ def upload_batch():
             logger.warning(f"跳过非PDF文件: {original_filename}")
             continue
         
-        # 确保文件名是安全的
-        safe_filename = secure_filename(original_filename)
+        # 保留原始文件名，但移除不安全字符，保留中文字符
+        # 使用一种更安全的方式处理文件名
+        base_name = os.path.splitext(original_filename)[0]
+        # 过滤掉不安全的字符，但保留中文和基本拉丁字符
+        safe_base_name = "".join(c for c in base_name if c.isalnum() or c in ".-_ " or ('\u4e00' <= c <= '\u9fff'))
+        if not safe_base_name:
+            safe_base_name = f"pdf_file_{int(time.time())}"  # 如果过滤后为空，使用默认名称
         
-        # 确保文件名保留.pdf扩展名
-        if not safe_filename.lower().endswith('.pdf'):
-            name_parts = os.path.splitext(safe_filename)
-            safe_filename = name_parts[0] + '.pdf'
+        safe_filename = f"{safe_base_name}.pdf"
         
         filepath = os.path.join(batch_dir, safe_filename)
         
@@ -152,8 +162,7 @@ def upload_batch():
             # 如果存在同名文件，添加时间戳
             if os.path.exists(filepath):
                 timestamp = int(time.time())
-                basename, ext = os.path.splitext(safe_filename)
-                safe_filename = f"{basename}_{timestamp}{ext}"
+                safe_filename = f"{safe_base_name}_{timestamp}.pdf"
                 filepath = os.path.join(batch_dir, safe_filename)
             
             file.save(filepath)
