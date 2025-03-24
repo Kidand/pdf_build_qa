@@ -37,3 +37,6 @@ pdf_files/
 .vscode/
 *.swp
 *.swo
+
+# tasks_status.json
+tasks_status.json

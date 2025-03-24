@@ -1,0 +1,96 @@
+/* 文件列表容器样式 */
+.file-list-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    background-color: #fff;
+}
+
+/* 自定义滚动条 */
+.file-list-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.file-list-container::-webkit-scrollbar-track {
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+.file-list-container::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 8px;
+}
+
+.file-list-container::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+/* 文件列表项样式 */
+.file-list-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+}
+
+.file-list-item:last-child {
+    border-bottom: none;
+}
+
+.file-list-item:hover {
+    background-color: #f9f9f9;
+}
+
+/* 文件图标 */
+.file-icon {
+    font-size: 1.25rem;
+    margin-right: 15px;
+    color: #e74c3c;
+}
+
+/* 文件详情 */
+.file-details {
+    flex: 1;
+    overflow: hidden;
+    margin-right: 10px;
+}
+
+/* 文件名 */
+.file-name {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 3px;
+}
+
+/* 文件大小 */
+.file-size {
+    font-size: 0.8rem;
+    color: #777;
+}
+
+/* 移除按钮 */
+.file-remove {
+    padding: 3px 8px;
+    font-size: 0.85rem;
+}
+
+/* 选中文件区域 */
+.selected-files {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+/* 处理中禁用状态 */
+.processing-disabled {
+    opacity: 0.7;
+    pointer-events: none;
+    filter: grayscale(30%);
+} 

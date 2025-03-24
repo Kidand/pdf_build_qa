@@ -95,7 +95,7 @@ class QAGenerator:
 6. 每个问题都必须提及论文的标题或主题
 
 【内容】：
-{{content[:50000]}}
+PDF_CONTENT_PLACEHOLDER
 
 请仅返回JSON格式，每个问答对包含'question'和'answer'字段：
 [
@@ -117,7 +117,7 @@ class QAGenerator:
 7. 每个问题都必须提及论文的标题或主题
 
 【内容】：
-{{content[:50000]}}
+PDF_CONTENT_PLACEHOLDER
 
 请仅返回JSON格式，每个问答对包含'question'和'answer'字段：
 [
@@ -132,13 +132,13 @@ class QAGenerator:
 【要求】：
 1. 为每个问题标记难度级别：基础(basic)、中级(intermediate)或高级(advanced)
 2. 基础级问题：问题应该聚焦于基础概念、定义和简单原理，难度相当于本科一年级或入门水平，回答要简明扼要、使用通俗易懂的语言、避免过多专业术语，并且保证问题和回答都清晰易懂，不要过于复杂。
-3. 中级问题：问题应关注概念间的联系与原理应用，以中等复杂度进行分析，回答需兼具全面性和一定深度，适度使用专业术语和理论框架并保证清晰易懂，难度相当于高年级本科或硕士初级水平，引导学生思考“为什么”和“如何”的问题。
+3. 中级问题：问题应关注概念间的联系与原理应用，以中等复杂度进行分析，回答需兼具全面性和一定深度，适度使用专业术语和理论框架并保证清晰易懂，难度相当于高年级本科或硕士初级水平，引导学生思考"为什么"和"如何"的问题。
 4. 高级问题：问题应深入理论探讨，涵盖方法论分析、跨领域整合与研究局限性，鼓励批判性思考和创新视角，对现有研究提出质疑，回答需具备专家级深度与广度、涵盖多元观点和争议，能延伸至研究前沿与未解难题，难度相当于博士或资深研究者水平，并体现对相关理论体系与方法论的深入理解。
 5. 确保问答深度与标记的难度级别相符
 6. 每个问题都必须提及论文的标题或主题
 
 【内容】：
-{{content[:50000]}}
+PDF_CONTENT_PLACEHOLDER
 
 请仅返回JSON格式，每个问答对包含'question'、'answer'和'level'字段：
 [
@@ -159,9 +159,72 @@ class QAGenerator:
         Returns:
             str: 完整提示词
         """
+        logger.info(f"准备问答提示词: level={level}, num_pairs={num_pairs}")
+        logger.info(f"原始PDF内容长度: {len(content)} 字符")
+        
+        # 获取模板
         template = self._get_prompt_template(level, num_pairs, metadata)
-        # 将content插入到模板中
-        prompt = template.replace("{content}", content)
+        logger.info(f"模板长度: {len(template)} 字符")
+        
+        # 确保content不为None
+        if content is None:
+            logger.warning("PDF内容为None，使用空字符串替代")
+            content = ""
+        
+        # 截断内容
+        content_to_use = content[:50000]
+        if len(content) > 50000:
+            logger.info(f"PDF内容超过50000字符，已截断，原始长度: {len(content)}")
+        
+        # 确保有内容用于替换
+        if not content_to_use:
+            logger.warning("PDF内容为空，替换后提示词可能无效")
+        
+        # 检查模板中的占位符类型
+        if "{content[:50000]}" in template:
+            logger.info("检测到模板使用 {content[:50000]} 占位符")
+            prompt = template.replace("{content[:50000]}", content_to_use)
+        elif "{content}" in template:
+            logger.info("检测到模板使用 {content} 占位符")
+            prompt = template.replace("{content}", content_to_use)
+        else:
+            # 如果都找不到，尝试直接在内容标记后插入
+            content_marker = "【内容】："
+            if content_marker in template:
+                logger.info(f"使用内容标记 {content_marker} 进行拆分替换")
+                parts = template.split(content_marker)
+                if len(parts) >= 2:
+                    before = parts[0] + content_marker + "\n"
+                    after_parts = parts[1].split("\n", 1)
+                    if len(after_parts) > 1:
+                        after = "\n" + after_parts[1]
+                    else:
+                        after = ""
+                    prompt = before + content_to_use + after
+                else:
+                    logger.warning("无法拆分模板，使用原始模板")
+                    prompt = template
+            else:
+                logger.warning("未找到任何占位符，使用原始模板")
+                prompt = template
+        
+        logger.info(f"替换后的提示词长度: {len(prompt)} 字符")
+        
+        # 检查替换是否成功
+        if "{content" in prompt:
+            logger.warning("警告: 可能未成功替换占位符")
+        
+        # 验证内容样本是否在提示词中
+        if content_to_use:
+            content_sample = content_to_use[:30]
+            if content_sample in prompt:
+                logger.info("验证成功: PDF内容已包含在提示词中")
+                start_pos = prompt.find(content_sample)
+                context_sample = prompt[max(0, start_pos-10):min(len(prompt), start_pos+50)]
+                logger.info(f"内容示例: ...{context_sample}...")
+            else:
+                logger.warning("警告: 无法在提示词中找到PDF内容样本")
+        
         return prompt
     
     def process_pdf(self, pdf_path):

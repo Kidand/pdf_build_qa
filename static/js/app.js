@@ -7,17 +7,18 @@ $(document).ready(function() {
     console.log("Document ready, initializing app...");
     
     // 全局变量
-    let uploadedFile = null;
+    let uploadedFiles = []; // 修改为数组，存储多个文件
     let currentTask = null;
     let pollingInterval = null;
+    let isProcessing = false; // 标记是否正在处理
     
     // DOM元素引用
     const dropZone = $('#dropZone');
     const fileInput = $('#fileInput');
-    const selectedFileInfo = $('#selectedFileInfo');
-    const selectedFileName = $('#selectedFileName');
-    const selectedFileSize = $('#selectedFileSize');
-    const removeFileBtn = $('#removeFileBtn');
+    const selectedFilesList = $('#selectedFilesList');
+    const fileList = $('#fileList');
+    const fileCount = $('#fileCount');
+    const clearFilesBtn = $('#clearFilesBtn');
     const startProcessingBtn = $('#startProcessingBtn');
     const processingCard = $('#processingCard');
     const progressBar = $('#progressBar');
@@ -100,7 +101,7 @@ $(document).ready(function() {
             console.log("Drop event triggered");
             
             if (e.dataTransfer.files.length) {
-                handleFileSelect(e.dataTransfer.files[0]);
+                handleFilesSelect(e.dataTransfer.files);
             }
         });
         
@@ -113,7 +114,7 @@ $(document).ready(function() {
         fileInputElement.addEventListener('change', function() {
             console.log("File input change event triggered");
             if (this.files.length) {
-                handleFileSelect(this.files[0]);
+                handleFilesSelect(this.files);
             }
         });
         
@@ -147,7 +148,7 @@ $(document).ready(function() {
         $(this).removeClass('active');
         
         if (e.originalEvent.dataTransfer.files.length) {
-            handleFileSelect(e.originalEvent.dataTransfer.files[0]);
+            handleFilesSelect(e.originalEvent.dataTransfer.files);
         }
     });
     
@@ -159,47 +160,138 @@ $(document).ready(function() {
     fileInput.on('change', function() {
         console.log("File input changed (jQuery)");
         if (this.files.length) {
-            handleFileSelect(this.files[0]);
+            handleFilesSelect(this.files);
         }
     });
     
-    // 文件选择处理
-    function handleFileSelect(file) {
-        console.log("File selected:", file.name);
-        if (!file) return;
+    // 多文件选择处理
+    function handleFilesSelect(files) {
+        if (!files || files.length === 0) return;
         
-        // 验证文件类型
-        if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-            showAlert('错误：请选择PDF文件');
-            return;
+        console.log(`选择了 ${files.length} 个文件`);
+        
+        // 循环处理每个文件
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            
+            // 验证文件类型
+            if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                showAlert(`错误：文件 "${file.name}" 不是PDF格式`);
+                continue;
+            }
+            
+            // 验证文件大小（最大50MB）
+            if (file.size > 50 * 1024 * 1024) {
+                showAlert(`错误：文件 "${file.name}" 大小超过50MB`);
+                continue;
+            }
+            
+            // 检查是否已存在同名文件
+            const existingFileIndex = uploadedFiles.findIndex(f => f.name === file.name);
+            if (existingFileIndex !== -1) {
+                // 替换已存在的文件
+                uploadedFiles[existingFileIndex] = file;
+                // 更新UI中的文件项
+                updateFileListItem(existingFileIndex, file);
+            } else {
+                // 添加新文件
+                uploadedFiles.push(file);
+                // 添加新的文件项到UI
+                addFileListItem(uploadedFiles.length - 1, file);
+            }
         }
         
-        // 验证文件大小（最大50MB）
-        if (file.size > 50 * 1024 * 1024) {
-            showAlert('错误：文件大小不能超过50MB');
-            return;
-        }
+        // 更新文件计数和控制按钮状态
+        updateFileCount();
         
-        uploadedFile = file;
-        
-        // 更新UI显示选中的文件
-        selectedFileName.text(file.name);
-        selectedFileSize.text('文件大小: ' + formatFileSize(file.size));
-        selectedFileInfo.removeClass('d-none');
-        startProcessingBtn.prop('disabled', false);
-        
-        // 自动切换到参数设置选项卡
-        $('a[href="#settings"]').tab('show');
+        // 清空文件输入，以便再次选择相同的文件
+        fileInput.val('');
     }
     
-    // 移除文件按钮点击事件
-    removeFileBtn.on('click', function() {
-        resetFileSelection();
+    // 添加文件项到列表
+    function addFileListItem(index, file) {
+        const fileItem = $(`
+            <li class="list-group-item file-list-item" data-index="${index}">
+                <i class="bi bi-file-earmark-pdf file-icon"></i>
+                <div class="file-details">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${formatFileSize(file.size)}</div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger file-remove">
+                    <i class="bi bi-x"></i>
+                </button>
+            </li>
+        `);
+        
+        // 绑定移除按钮事件
+        fileItem.find('.file-remove').on('click', function() {
+            removeFile(index);
+        });
+        
+        fileList.append(fileItem);
+    }
+    
+    // 更新现有文件项
+    function updateFileListItem(index, file) {
+        const fileItem = fileList.find(`li[data-index="${index}"]`);
+        if (fileItem.length) {
+            fileItem.find('.file-name').text(file.name);
+            fileItem.find('.file-size').text(formatFileSize(file.size));
+        }
+    }
+    
+    // 移除单个文件
+    function removeFile(index) {
+        if (index < 0 || index >= uploadedFiles.length) return;
+        
+        // 从数组中移除
+        uploadedFiles.splice(index, 1);
+        
+        // 重新渲染整个文件列表（避免index错位问题）
+        renderFileList();
+        
+        // 更新文件计数和控制按钮状态
+        updateFileCount();
+    }
+    
+    // 渲染整个文件列表
+    function renderFileList() {
+        // 清空现有列表
+        fileList.empty();
+        
+        // 重新添加所有文件
+        uploadedFiles.forEach((file, index) => {
+            addFileListItem(index, file);
+        });
+    }
+    
+    // 更新文件计数和按钮状态
+    function updateFileCount() {
+        const count = uploadedFiles.length;
+        fileCount.text(count);
+        
+        if (count > 0) {
+            selectedFilesList.removeClass('d-none');
+            startProcessingBtn.prop('disabled', false);
+        } else {
+            selectedFilesList.addClass('d-none');
+            startProcessingBtn.prop('disabled', true);
+        }
+    }
+    
+    // 清除所有文件按钮事件
+    clearFilesBtn.on('click', function() {
+        uploadedFiles = [];
+        fileList.empty();
+        updateFileCount();
     });
     
     // 开始处理按钮点击事件
     startProcessingBtn.on('click', function() {
-        if (!uploadedFile) return;
+        if (uploadedFiles.length === 0 || isProcessing) return;
+        
+        // 设置处理状态，禁用相关UI元素
+        setProcessingState(true);
         
         // 显示处理进度UI
         processingCard.removeClass('d-none');
@@ -208,38 +300,67 @@ $(document).ready(function() {
         // 重置进度条
         updateProgress(0, '正在上传文件...');
         
-        // 首先上传文件
-        uploadFile(uploadedFile);
+        // 首先批量上传文件
+        uploadFiles(uploadedFiles);
     });
+    
+    // 设置处理状态
+    function setProcessingState(processing) {
+        isProcessing = processing;
+        
+        // 处理中时禁用上传区域和开始按钮
+        if (processing) {
+            dropZone.addClass('processing-disabled');
+            selectedFilesList.addClass('processing-disabled');
+            startProcessingBtn.prop('disabled', true);
+            
+            // 禁用选项卡切换
+            $('.sidebar-nav .nav-link').addClass('disabled');
+        } else {
+            dropZone.removeClass('processing-disabled');
+            selectedFilesList.removeClass('processing-disabled');
+            startProcessingBtn.prop('disabled', uploadedFiles.length === 0);
+            
+            // 启用选项卡切换
+            $('.sidebar-nav .nav-link').removeClass('disabled');
+        }
+    }
     
     // 重新开始按钮点击事件
     newProcessingBtn.on('click', function() {
         resetProcessing();
-        resetFileSelection();
+        // 保留已上传的文件，只重置处理状态
+        setProcessingState(false);
         
         // 切换回首页选项卡
         $('a[href="#home"]').tab('show');
     });
     
-    // 上传文件到服务器
-    function uploadFile(file) {
-        console.log("Uploading file:", file.name);
+    // 批量上传文件到服务器
+    function uploadFiles(files) {
+        console.log(`开始上传 ${files.length} 个文件`);
+        
         const formData = new FormData();
-        formData.append('file', file);
+        
+        // 添加所有文件到表单
+        files.forEach((file, index) => {
+            formData.append('files', file);
+        });
         
         $.ajax({
-            url: '/upload',
+            url: '/upload_batch',
             type: 'POST',
             data: formData,
             processData: false,
             contentType: false,
             success: function(response) {
-                console.log("Upload response:", response);
+                console.log("Batch upload response:", response);
                 if (response.status === 'success') {
                     updateProgress(20, '文件上传成功，准备处理...');
-                    startProcessing(response.filename);
+                    startProcessing(response.batch_id);
                 } else {
                     handleError('文件上传失败: ' + response.message);
+                    setProcessingState(false);
                 }
             },
             error: function(xhr, status, error) {
@@ -250,15 +371,16 @@ $(document).ready(function() {
                     errorMsg = resp.message || errorMsg;
                 } catch (e) {}
                 handleError(errorMsg);
+                setProcessingState(false);
             }
         });
     }
     
     // 开始处理任务
-    function startProcessing(filename) {
+    function startProcessing(batchId) {
         // 获取所有参数
         const params = {
-            filename: filename,
+            batch_id: batchId,
             num_qa: parseInt(numQASlider.val()),
             qa_level: $('input[name="qaLevel"]:checked').val(),
             use_latex_ocr: useLatexOCRCheckbox.is(':checked'),
@@ -275,7 +397,7 @@ $(document).ready(function() {
         }
         
         $.ajax({
-            url: '/process',
+            url: '/process_batch',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(params),
@@ -288,6 +410,7 @@ $(document).ready(function() {
                     startPolling(currentTask);
                 } else {
                     handleError('处理请求失败: ' + response.message);
+                    setProcessingState(false);
                 }
             },
             error: function(xhr) {
@@ -297,6 +420,7 @@ $(document).ready(function() {
                     errorMsg = resp.message || errorMsg;
                 } catch (e) {}
                 handleError(errorMsg);
+                setProcessingState(false);
             }
         });
     }
@@ -332,6 +456,7 @@ $(document).ready(function() {
             error: function() {
                 clearInterval(pollingInterval);
                 handleError('检查任务状态失败');
+                setProcessingState(false);
             }
         });
     }
@@ -368,6 +493,9 @@ $(document).ready(function() {
                 errorMessage.text('处理过程中出现未知错误');
             }
         }
+        
+        // 恢复UI状态
+        setProcessingState(false);
     }
     
     // 更新进度条和进度消息
@@ -423,14 +551,6 @@ $(document).ready(function() {
         alertBox.find('.alert-message').text(message);
     }
     
-    // 重置文件选择状态
-    function resetFileSelection() {
-        uploadedFile = null;
-        fileInput.val('');
-        selectedFileInfo.addClass('d-none');
-        startProcessingBtn.prop('disabled', true);
-    }
-    
     // 重置处理状态
     function resetProcessing() {
         // 停止轮询
@@ -451,6 +571,9 @@ $(document).ready(function() {
         
         // 清除任务ID
         currentTask = null;
+        
+        // 恢复UI状态
+        setProcessingState(false);
     }
     
     // 格式化文件大小显示
