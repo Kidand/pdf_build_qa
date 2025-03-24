@@ -99,6 +99,18 @@ def process_file():
         'model': data.get('model', None)
     }
     
+    # 处理自定义API配置
+    api_key = data.get('api_key')
+    api_url = data.get('api_url')
+    
+    if params['model'] and api_key:
+        os.environ["DEEPSEEK_API_KEY"] = api_key
+        params['api_key'] = api_key
+    
+    if params['model'] and api_url:
+        os.environ["DEEPSEEK_API_URL"] = api_url
+        params['api_url'] = api_url
+    
     if not filename:
         return jsonify({"status": "error", "message": "未指定文件"}), 400
     
@@ -155,6 +167,13 @@ def process_pdf_task(task_id, filepath, params):
         # 如果指定了模型，设置环境变量
         if params['model']:
             os.environ["MODEL_NAME"] = params['model']
+            
+            # 如果提供了API配置，也设置相应的环境变量
+            if 'api_key' in params and params['api_key']:
+                os.environ["DEEPSEEK_API_KEY"] = params['api_key']
+            
+            if 'api_url' in params and params['api_url']:
+                os.environ["DEEPSEEK_API_URL"] = params['api_url']
         
         # 处理qa_level参数
         qa_level = None if params['qa_level'] == 'all' else params['qa_level']

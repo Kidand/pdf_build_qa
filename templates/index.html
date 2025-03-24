@@ -206,7 +206,7 @@
                                             <div class="mb-3">
                                                 <label for="numQA" class="form-label">问答对数量</label>
                                                 <div class="d-flex align-items-center">
-                                                    <input type="range" class="form-range" id="numQA" min="5" max="30" step="5" value="10">
+                                                    <input type="range" class="form-range" id="numQA" min="1" max="10" step="1" value="10">
                                                     <span id="numQAValue" class="ms-2 badge bg-primary">10</span>
                                                 </div>
                                                 <div class="form-text">为每个PDF文件生成的问答对数量</div>
@@ -245,9 +245,27 @@
                                                 <select class="form-select" id="model">
                                                     <option value="">使用默认模型</option>
                                                     <option value="deepseek-chat">DeepSeek Chat</option>
-                                                    <option value="deepseek-chat-pro">DeepSeek Chat Pro</option>
                                                 </select>
-                                                <div class="form-text">选择用于生成问答对的DeepSeek模型</div>
+                                                <div class="form-text">选择用于生成问答对的模型</div>
+                                            </div>
+                                            
+                                            <!-- API配置选项，仅在选择非默认模型时显示 -->
+                                            <div class="mb-3 api-config d-none" id="apiConfigSection">
+                                                <div class="card bg-light">
+                                                    <div class="card-body">
+                                                        <h6 class="card-subtitle mb-3">API配置</h6>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label for="apiKey" class="form-label">API Key</label>
+                                                            <input type="password" class="form-control" id="apiKey" placeholder="输入您的API密钥">
+                                                        </div>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label for="apiUrl" class="form-label">API URL</label>
+                                                            <input type="text" class="form-control" id="apiUrl" placeholder="https://api.deepseek.com/v1" value="https://api.deepseek.com/v1">
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

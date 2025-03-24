@@ -47,6 +47,9 @@ $(document).ready(function() {
     const qaLevelRadios = $('input[name="qaLevel"]');
     const useLatexOCRCheckbox = $('#useLatexOCR');
     const modelSelect = $('#model');
+    const apiConfigSection = $('#apiConfigSection');
+    const apiKeyInput = $('#apiKey');
+    const apiUrlInput = $('#apiUrl');
     const maxWorkersInput = $('#maxWorkers');
     const apiRetriesInput = $('#apiRetries');
     const retryDelayInput = $('#retryDelay');
@@ -54,6 +57,17 @@ $(document).ready(function() {
     // 显示数值的标签更新
     numQASlider.on('input', function() {
         numQAValue.text(this.value);
+    });
+    
+    // 模型选择变更时，控制API配置显示
+    modelSelect.on('change', function() {
+        if (this.value === '') {
+            // 默认模型，隐藏API配置
+            apiConfigSection.addClass('d-none');
+        } else {
+            // 自定义模型，显示API配置
+            apiConfigSection.removeClass('d-none');
+        }
     });
     
     // 拖放区域事件处理
@@ -253,6 +267,12 @@ $(document).ready(function() {
             retry_delay: parseInt(retryDelayInput.val()),
             model: modelSelect.val()
         };
+        
+        // 如果选择了自定义模型，添加API配置
+        if (modelSelect.val() !== '') {
+            params.api_key = apiKeyInput.val();
+            params.api_url = apiUrlInput.val();
+        }
         
         $.ajax({
             url: '/process',
